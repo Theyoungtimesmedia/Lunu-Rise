@@ -190,8 +190,8 @@ const handleWithdraw = async () => {
                   <li>• Withdrawal time: 10am - 6pm daily</li>
                   <li>• Minimum withdrawal: $2</li>
                   <li>• Processing time: Up to 24 hours</li>
-                  <li>• USD withdrawals: 8% fee</li>
-                  <li>• Naira withdrawals: 15% fee</li>
+	                  <li>• USD/Crypto withdrawals: 8% fee</li>
+	                  <li>• Naira withdrawals: 15% fee (Only available for Nigerian users)</li>
                 </ul>
               </div>
             </div>
@@ -206,15 +206,15 @@ const handleWithdraw = async () => {
 
           <div>
             <Label htmlFor="currency">Withdrawal Currency</Label>
-            <Select value={currency} onValueChange={setCurrency}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="USD">USD (8% fee)</SelectItem>
-                <SelectItem value="NGN">Naira (15% fee)</SelectItem>
-              </SelectContent>
-            </Select>
+	            <Select value={currency} onValueChange={setCurrency}>
+	              <SelectTrigger>
+	                <SelectValue />
+	              </SelectTrigger>
+	              <SelectContent>
+	                <SelectItem value="USD">USD/Crypto (8% fee)</SelectItem>
+	                <SelectItem value="NGN">Naira (15% fee)</SelectItem>
+	              </SelectContent>
+	            </Select>
           </div>
 
           <div>

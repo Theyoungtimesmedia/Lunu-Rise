@@ -185,7 +185,7 @@ useEffect(() => {
             <div className="grid gap-4 sm:grid-cols-2">
               <Card>
                 <CardHeader>
-                  <CardTitle>Bank Account (NGN)</CardTitle>
+	                <CardTitle>Bank Account (NGN) - Optional</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {bankDetails ? (
@@ -202,7 +202,7 @@ useEffect(() => {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>USDT Wallet</CardTitle>
+	                <CardTitle>USDT Wallet (Preferred)</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {usdtDetails ? (

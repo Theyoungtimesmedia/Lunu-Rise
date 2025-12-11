@@ -19,7 +19,7 @@ const Login = () => {
   const { user } = useAuth(); // AuthContext
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    email: '',
+    phone: '',
     password: '',
     country: ''
   });
@@ -29,7 +29,7 @@ const Login = () => {
     if (user) navigate('/dashboard');
   }, [user, navigate]);
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const handlePhoneLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.country) {
       toast.error('Please select your country');
@@ -38,19 +38,40 @@ const Login = () => {
 
     setLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      // Workaround for phone-only login using Firebase Email/Password Auth
+      const dummyEmail = `${formData.phone}@lunurise.com`;
+
+      const userCredential = await signInWithEmailAndPassword(auth, dummyEmail, formData.password);
       const loggedUser = userCredential.user;
 
-      if (!loggedUser.emailVerified) {
-        toast.error('Please verify your email before logging in.');
+      // 1. Fetch user data from Firestore to check the registered country
+      const q = query(collection(db, 'users'), where('phone', '==', formData.phone));
+      const snapshot = await getDocs(q);
+
+      if (snapshot.empty) {
+        // This should not happen if registration is done correctly, but as a safeguard
+        await auth.signOut();
+        toast.error('User data not found. Please contact support.');
         return;
       }
+
+      const userData = snapshot.docs[0].data();
+      const registeredCountry = userData.country;
+
+      // 2. Enforce country matching
+      if (registeredCountry !== formData.country) {
+        await auth.signOut(); // Log out the user immediately
+        toast.error('Login failed. Please select the country you registered with.');
+        return;
+      }
+
+      // Email verification check is removed as per phone-only registration logic
 
       toast.success('Login successful!');
       // navigation will be triggered by AuthContext effect
     } catch (error: any) {
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        toast.error('Invalid email or password.');
+        toast.error('Invalid phone number or password.');
       } else {
         toast.error(error.message || 'Login failed');
       }
@@ -59,35 +80,9 @@ const Login = () => {
     }
   };
 
+  // Social sign-in is disabled as per user request for phone-only login.
   const handleOAuthLogin = async (provider: typeof googleProvider | typeof appleProvider) => {
-    setLoading(true);
-    try {
-      const userCredential = await signInWithPopup(auth, provider);
-      const loggedUser = userCredential.user;
-
-      // Check if user exists in Firestore
-      const q = query(collection(db, 'users'), where('email', '==', loggedUser.email));
-      const snapshot = await getDocs(q);
-
-      if (snapshot.empty) {
-        toast.error('User does not exist. Please register first.');
-        return;
-      }
-
-      toast.success('Login successful!');
-      // navigation will be triggered by AuthContext effect
-    } catch (error: any) {
-      console.error(error);
-      if (error.code === 'auth/popup-closed-by-user') {
-        toast.error('Login cancelled. You closed the popup.');
-      } else if (error.code === 'auth/account-exists-with-different-credential') {
-        toast.error('An account already exists with the same email but different sign-in method.');
-      } else {
-        toast.error(error.message || 'Login failed');
-      }
-    } finally {
-      setLoading(false);
-    }
+    toast.error('Social sign-in is currently disabled. Please use phone number login.');
   };
 
   return (
@@ -107,35 +102,9 @@ const Login = () => {
             <CardDescription>Sign in to your account</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex justify-center gap-4 mt-4">
-              <Button
-                onClick={() => handleOAuthLogin(googleProvider)}
-                className="flex items-center justify-center p-3 rounded-full border hover:bg-gray-100 transition"
-                variant="secondary"
-                disabled={loading}
-              >
-                {loading ? (
-                  <span className="animate-pulse text-sm">...</span>
-                ) : (
-                  <FcGoogle className="text-2xl" />
-                )}
-              </Button>
-
-              <Button
-                onClick={() => handleOAuthLogin(appleProvider)}
-                className="flex items-center justify-center p-3 rounded-full border hover:bg-gray-100 transition"
-                variant="secondary"
-                disabled={loading}
-              >
-                {loading ? (
-                  <span className="animate-pulse text-sm">...</span>
-                ) : (
-                  <FaApple className="text-2xl text-black" />
-                )}
-              </Button>
-            </div>
-            {/* Email login form */}
-            <form onSubmit={handleEmailLogin} className="space-y-4">
+	            {/* Social sign-in disabled as per user request for phone-only login */}
+	            {/* Phone login form */}
+	            <form onSubmit={handlePhoneLogin} className="space-y-4">
               <div>
                 <Label htmlFor="country">Country</Label>
                 <CountrySelector
@@ -145,17 +114,17 @@ const Login = () => {
                 />
               </div>
 
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  placeholder="Enter email"
-                  required
-                />
-              </div>
+	              <div>
+	                <Label htmlFor="phone">Phone Number</Label>
+	                <Input
+	                  id="phone"
+	                  type="tel"
+	                  value={formData.phone}
+	                  onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+	                  placeholder="Enter phone number"
+	                  required
+	                />
+	              </div>
 
               <div>
                 <Label htmlFor="password">Password</Label>

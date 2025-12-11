@@ -207,104 +207,30 @@ const Deposit = () => {
           </Card>
 
           {/* Payment Methods */}
-          <Tabs defaultValue="base" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="base" className="flex items-center gap-2">
-                <CreditCard className="h-4 w-4" />
-                💳 Naira Deposit
-              </TabsTrigger>
-              <TabsTrigger value="crypto" className="flex items-center gap-2">
-                <Smartphone className="h-4 w-4" />
-                📱 USDT (BEP20)
-              </TabsTrigger>
-            </TabsList>
+	          <Tabs defaultValue="crypto" className="w-full">
+	            <TabsList className="grid w-full grid-cols-1">
+	              <TabsTrigger value="crypto" className="flex items-center gap-2">
+	                <Smartphone className="h-4 w-4" />
+	                📱 Automated Payment System (USDT/Crypto)
+	              </TabsTrigger>
+	            </TabsList>
 
-            <TabsContent value="base" className="mt-6">
-              <Card className="shadow-card">
-                <CardHeader>
-                  <CardTitle>Pay with Naira Deposit</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Active Investments Section */}
-                  
-                  <div className="bg-info/10 border border-info/20 rounded-lg p-4 mb-4">
-                    <h4 className="font-semibold mb-3 flex items-center">
-                      <span className="text-info mr-2">💰</span>
-                      Deposit Instructions
-                    </h4>
-                    <ul className="space-y-2 text-sm">
-                      <li>• <strong>Earn instant 5% cash back</strong> when you deposit with USDT</li>
-                      <li>• Only supported network is <strong>USDT BEP20</strong></li>
-                      <li>• Send USDT BEP20 from any of your wallets to our address</li>
-                      <li>• Ensure you use the matching network which is <strong>BEP20</strong></li>
-                      <li>• Minimum deposit is <strong>$5</strong></li>
-                      <li>• Any deposit(s) made below minimum will not be credited</li>
-                    </ul>
-                  </div>
 
-                  <div>
-                    <Label htmlFor="country">Select Country</Label>
-                    <CountrySelector value={selectedCountry} onValueChange={setSelectedCountry} disabled={submitting} />
-                  </div>
-
-                  {selectedCountry && selectedCountry !== 'OTHER' && <div className="p-4 bg-muted/50 rounded-lg">
-                      <div className="flex justify-between items-center mb-2">
-                        <span>Amount ({getSelectedRate()?.currency}):</span>
-                        <span className="font-semibold text-lg">
-                          {getSelectedRate()?.currency_symbol}{getLocalAmountFromUSD()}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span>Equivalent USD:</span>
-                        <span className="font-semibold">${getUSDAmount().toFixed(2)}</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Rate: 1 USD = {getSelectedRate()?.rate_to_usd} {getSelectedRate()?.currency}
-                      </p>
-                    </div>}
-
-                  {selectedCountry === 'OTHER' && <div className="p-4 bg-warning/10 border border-warning/20 rounded-lg">
-                      <p className="text-sm font-medium text-warning mb-2">Local Currency Payment Unavailable</p>
-                      <p className="text-sm text-muted-foreground">
-                        Local currency payment gateway is not available for your country yet. 
-                        Please use USDT (BEP20) payment method.
-                      </p>
-                    </div>}
-
-                  <div className="flex gap-2">
-                    <Button 
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white" 
-                      variant="default" 
-                      disabled={!selectedCountry || selectedCountry === 'OTHER' || submitting}
-                      onClick={handleBasePayment}
-                    >
-                      {submitting ? 'Processing...' : 'Pay Now'}
-                    </Button>
-                    <Button 
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white" 
-                      variant="default" 
-                      onClick={() => navigate('/crypto-deposit')}
-                    >
-                      Pay with USDT
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
 
             <TabsContent value="crypto" className="mt-6">
               <Card className="shadow-card">
                 <CardHeader>
-                  <CardTitle>USDT (BEP20) Deposit</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Send exactly ${getUSDAmount().toFixed(2)} USDT to the address below
-                  </p>
+	                  <CardTitle>Automated Payment System (USDT/Crypto)</CardTitle>
+	                      <p className="text-sm text-muted-foreground">
+	                        Send exactly ${getUSDAmount().toFixed(2)} USD equivalent in Crypto to the address below
+	                      </p>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="bg-warning/10 border border-warning/20 rounded-lg p-4">
-                    <h4 className="font-semibold text-warning mb-2">USDT Deposit Instructions</h4>
+	                    <h4 className="font-semibold text-warning mb-2">Automated Payment Instructions</h4>
                     <ul className="text-sm text-muted-foreground space-y-1">
-                      <li>• Send EXACTLY ${getUSDAmount().toFixed(2)} USDT to the address below</li>
+	                      <li>• Send EXACTLY ${getUSDAmount().toFixed(2)} USDT to the address below</li>
+	                      <li>• You are using the Automated Payment System (USDT/Crypto)</li>
                       <li>• Use ONLY BNB Chain (BEP20) network - other networks will result in loss</li>
                       <li>• Double-check the address before sending</li>
                       <li>• Save your transaction hash for verification</li>

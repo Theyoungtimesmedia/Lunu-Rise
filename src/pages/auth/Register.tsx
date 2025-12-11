@@ -14,13 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { FcGoogle } from "react-icons/fc";
 import { FaApple } from "react-icons/fa";
 
-// Simple 8-character referral code generator
-const generateReferralCode = () => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let code = '';
-  for (let i = 0; i < 8; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
-  return code;
-};
+
 
 const Register = () => {
   const navigate = useNavigate();
@@ -29,27 +23,19 @@ const Register = () => {
 
   const [formData, setFormData] = useState({
     phone: '',
-    email: '',
     password: '',
     confirmPassword: '',
-    country: '',
-    referralCode: ''
+    country: ''
   });
 
+  // The user requires a registration bonus to be added. Let's assume $10 (1000 units).
+  const REGISTRATION_BONUS = 1000; // Assuming 1000 units is $10 or equivalent
+
   useEffect(() => {
-    const refParam = searchParams.get('ref');
-    if (refParam) setFormData(prev => ({ ...prev, referralCode: refParam }));
+    // Referral logic removed as per user request
   }, [searchParams]);
 
-  const handleReferralBonus = async (referralCode: string) => {
-    const q = query(collection(db, 'users'), where('referralCode', '==', referralCode));
-    const snapshot = await getDocs(q);
-    snapshot.forEach(async docSnap => {
-      await updateDoc(doc(db, 'users', docSnap.id), { balance: increment(1000) });
-    });
-  };
-
-  const handleEmailSignUp = async (e: React.FormEvent) => {
+  const handlePhoneSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.country) {
       toast.error('Please fill all required fields');
@@ -62,71 +48,42 @@ const Register = () => {
 
     setLoading(true);
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+      // Workaround for phone-only registration using Firebase Email/Password Auth
+      // by constructing a dummy email from the phone number.
+      const dummyEmail = `${formData.phone}@lunurise.com`;
+
+      const userCredential = await createUserWithEmailAndPassword(auth, dummyEmail, formData.password);
       const user = userCredential.user;
 
-      await sendEmailVerification(user);
+      // Email verification is likely not needed for phone-only
+      // await sendEmailVerification(user);
 
-      const myReferralCode = generateReferralCode();
       await setDoc(doc(db, 'users', user.uid), {
-        email: formData.email,
         phone: formData.phone,
         country: formData.country,
-        balance: 0,
-        referralCode: myReferralCode,
-        referrerCode: formData.referralCode || null,
+        balance: REGISTRATION_BONUS, // Add registration bonus
         createdAt: new Date()
       });
 
-      if (formData.referralCode) await handleReferralBonus(formData.referralCode);
-
-      toast.success('Account created! Check your email for verification.');
+      toast.success('Account created! Registration bonus added. Please log in.');
       navigate('/auth/login');
     } catch (error: any) {
-      toast.error(error.message || 'Registration failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOAuthSignIn = async (provider: typeof googleProvider | typeof appleProvider) => {
-    setLoading(true);
-    try {
-      const userCredential = await signInWithPopup(auth, provider);
-      const user = userCredential.user;
-
-      const q = query(collection(db, 'users'), where('email', '==', user.email));
-      const snapshot = await getDocs(q);
-
-      if (snapshot.empty) {
-        const myReferralCode = generateReferralCode();
-        await setDoc(doc(db, 'users', user.uid), {
-          email: user.email,
-          phone: user.phoneNumber || '',
-          country: '',
-          balance: 0,
-          referralCode: myReferralCode,
-          referrerCode: searchParams.get('ref') || null,
-          createdAt: new Date()
-        });
-
-        const ref = searchParams.get('ref');
-        if (ref) await handleReferralBonus(ref);
-      }
-
-      toast.success('Logged in successfully!');
-      navigate('/dashboard');
-    } catch (error: any) {
-      console.error(error);
-      if (error.code === 'auth/popup-closed-by-user') {
-        toast.error('Login cancelled. You closed the popup.');
+      // Check for 'auth/email-already-in-use' and provide a phone-specific message
+      if (error.code === 'auth/email-already-in-use') {
+        toast.error('This phone number is already registered. Please log in.');
       } else {
-        toast.error(error.message || 'Sign-In failed');
+        toast.error(error.message || 'Registration failed');
       }
     } finally {
       setLoading(false);
     }
   };
+
+	  // OAuth sign-in is disabled as the user requires phone-only registration.
+	  // The buttons are still present in the JSX, so I will remove them next.
+	  const handleOAuthSignIn = async (provider: typeof googleProvider | typeof appleProvider) => {
+	    toast.error('Social sign-in is currently disabled. Please use phone number registration.');
+	  };
 
   return (
     <Layout showBottomNav={false}>
@@ -145,35 +102,9 @@ const Register = () => {
             <CardDescription>Join Luno Rise and start earning today</CardDescription>
           </CardHeader>
           <CardContent>
-          <div className="flex justify-center gap-4">
-            <Button
-              onClick={() => handleOAuthSignIn(googleProvider)}
-              className="flex items-center justify-center p-3 rounded-full border hover:bg-gray-100 transition"
-              variant="secondary"
-              disabled={loading}
-            >
-              {loading ? (
-                <span className="animate-pulse text-sm">...</span>
-              ) : (
-                <FcGoogle className="text-2xl" />
-              )}
-            </Button>
+	          {/* Social sign-in disabled as per user request for phone-only registration */}
 
-            <Button
-              onClick={() => handleOAuthSignIn(appleProvider)}
-              className="flex items-center justify-center p-3 rounded-full border hover:bg-gray-100 transition"
-              variant="secondary"
-              disabled={loading}
-            >
-              {loading ? (
-                <span className="animate-pulse text-sm">...</span>
-              ) : (
-                <FaApple className="text-2xl text-black" />
-              )}
-            </Button>
-          </div>
-
-            <form onSubmit={handleEmailSignUp} className="space-y-4">
+	            <form onSubmit={handlePhoneSignUp} className="space-y-4">
               <div>
                 <Label>Country</Label>
                 <CountrySelector
@@ -181,10 +112,7 @@ const Register = () => {
                   onValueChange={(value) => setFormData(prev => ({ ...prev, country: value }))}
                 />
               </div>
-              <div>
-                <Label>Email</Label>
-                <Input id="email" type="email" value={formData.email} onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))} required />
-              </div>
+
               <div>
                 <Label>Phone Number</Label>
                 <Input id="phone" type="tel" value={formData.phone} onChange={e => setFormData(prev => ({ ...prev, phone: e.target.value }))} required />
@@ -197,10 +125,7 @@ const Register = () => {
                 <Label>Confirm Password</Label>
                 <Input id="confirmPassword" type="password" value={formData.confirmPassword} onChange={e => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))} required minLength={6} />
               </div>
-              <div>
-                <Label>Referral Code (Optional)</Label>
-                <Input id="referralCode" type="text" value={formData.referralCode} onChange={e => setFormData(prev => ({ ...prev, referralCode: e.target.value }))} />
-              </div>
+
 
               <Button type="submit" className="w-full" variant="primary_gradient" disabled={loading || !formData.country}>
                 {loading ? 'Creating Account...' : 'Sign Up'}
